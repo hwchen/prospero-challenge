@@ -1,0 +1,31 @@
+default target = "build"
+
+config profile = "debug"
+
+# Pick cflags based on the build profile
+let cflags = profile | match {
+    "debug" => ["-O0"]
+    "release" => ["-O3"]
+    "asan-address" => ["-O0", "--sanitize=address"]
+    "%" => ""
+}
+
+build "prospero" {
+    from "main.c3"
+    run "c3c compile {cflags*} <in*> -o <out:out-dir>"
+}
+
+build "testrun" {
+    from glob "*.c3"
+    run "c3c compile-test --suppress-run {cflags*} <in*> -o <out:out-dir>"
+}
+
+task build {
+    build "prospero"
+}
+
+task test {
+    let test_exe = "testrun"
+    build test_exe
+    run "<test_exe>"
+}
