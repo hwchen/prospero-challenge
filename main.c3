@@ -7,6 +7,7 @@ import std::math;
 import std::core::test;
 
 const usz IMAGE_SIZE = 1024;
+const usz IMAGE_PIXEL_COUNT = IMAGE_SIZE * IMAGE_SIZE;
 
 fn int main(String[] cli_args) {
 	String? input = (String)file::load_temp(cli_args[1]);
@@ -20,7 +21,7 @@ fn int main(String[] cli_args) {
 		space_neg[idx] = x * -1;
 	}
 	Coord[] coords = meshgrid(space, space_neg);
-	double[] output = mem::temp_array(double, IMAGE_SIZE * IMAGE_SIZE);
+	double[] output = mem::temp_array(double, IMAGE_PIXEL_COUNT);
 
 	List{Instr} instrs_list;
 	foreach (idx, line : input.tsplit("\n")) {
@@ -78,7 +79,7 @@ fn int main(String[] cli_args) {
 		output[idx] = v[last_out];
 
 		if (idx % 1000 == 0) {
-			io::eprintfn("Finished cell %d/%d", idx, IMAGE_SIZE * IMAGE_SIZE);
+			io::eprintfn("Finished cell %d/%d", idx, IMAGE_PIXEL_COUNT);
 		}
 	}
 	//io::eprintfn("%s", output);
