@@ -7,16 +7,16 @@ import std::core::test;
 
 const usz IMAGE_SIZE = 1024;
 const usz IMAGE_PIXEL_COUNT = IMAGE_SIZE * IMAGE_SIZE;
-const usz SIMD_CHUNK_SIZE = 16;
+const usz SIMD_CHUNK_SIZE = 32;
 
-// Manually chunk into 1 double (8 bytes) x 16 register chunks, for simd.
+// Manually chunk into 1 float (4 bytes) x 32 register chunks, for simd.
 // This should be better than numpy vectors which have to create an entire frame
 // for each instruction in order to get vectorization. instead, we just need to
 // hold the intermediate frames for just 8 at a time. I assume this also avoids having
 // to allocate for each frame.
 //
-// 16 seems best, maps to 128 bits register
-alias Chunk = double[<SIMD_CHUNK_SIZE>];
+// 32 seems best, maps to 128 bits register
+alias Chunk = float[<SIMD_CHUNK_SIZE>];
 
 fn int main(String[] cli_args) {
 	$assert(IMAGE_SIZE % SIMD_CHUNK_SIZE == 0);
@@ -26,14 +26,14 @@ fn int main(String[] cli_args) {
 		io::eprintfn("Error loading prospero.vm");
 		return 1;
 	}
-	double[] space = linspace(-1, 1, IMAGE_SIZE);
-	double[] space_neg = mem::temp_array(double, IMAGE_SIZE);
+	float[] space = linspace(-1, 1, IMAGE_SIZE);
+	float[] space_neg = mem::temp_array(float, IMAGE_SIZE);
 	foreach (idx, x : space) {
 		space_neg[idx] = x * -1;
 	}
 
-	double[] x_coords = mem::temp_array(double, IMAGE_PIXEL_COUNT);
-	double[] y_coords = mem::temp_array(double, IMAGE_PIXEL_COUNT);
+	float[] x_coords = mem::temp_array(float, IMAGE_PIXEL_COUNT);
+	float[] y_coords = mem::temp_array(float, IMAGE_PIXEL_COUNT);
 	foreach (i, y: space_neg) {
 		foreach (j, x : space) {
 			x_coords[(IMAGE_SIZE * i) + j] = x;
@@ -43,7 +43,7 @@ fn int main(String[] cli_args) {
 
 	Instr[] instrs = instructions::parse(tmem, input);
 	Chunk[] v = mem::temp_array(Chunk, instrs.len);
-	double[] output = mem::temp_array(double, IMAGE_PIXEL_COUNT);
+	float[] output = mem::temp_array(float, IMAGE_PIXEL_COUNT);
 
 	for (usz idx = 0; idx < IMAGE_PIXEL_COUNT; idx += SIMD_CHUNK_SIZE) {
 		uint last_out;
@@ -54,7 +54,7 @@ fn int main(String[] cli_args) {
 			switch (op) {
 				case VAR_X:  v[out] = x_coords[idx:SIMD_CHUNK_SIZE];
 				case VAR_Y:  v[out] = y_coords[idx:SIMD_CHUNK_SIZE];
-				case CONST:  v[out] = (double[<SIMD_CHUNK_SIZE>])instr.const_value;
+				case CONST:  v[out] = (float[<SIMD_CHUNK_SIZE>])instr.const_value;
 				case ADD:    v[out] = v[args[0]] + v[args[1]];
 				case SUB:    v[out] = v[args[0]] - v[args[1]];
 				case MUL:    v[out] = v[args[0]] * v[args[1]];
@@ -93,10 +93,10 @@ fn int main(String[] cli_args) {
 }
 
 macro linspace(start, end, samples) {
-	double interval = (double)(end - start) / (double)(samples - 1);
-	double[] space = mem::temp_array(double, samples);
+	float interval = (float)(end - start) / (float)(samples - 1);
+	float[] space = mem::temp_array(float, samples);
 	int idx;
-	double x = start;
+	float x = start;
 	while (idx < samples) {
 		space[idx] = x;
 		x += interval;

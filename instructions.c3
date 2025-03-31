@@ -16,7 +16,7 @@ fn Instr[] parse(Allocator alloc, String input) {
 				.op = op,
 			};
 			if (op == CONST) {
-				instr.const_value = parts[2].to_double()!!;
+				instr.const_value = parts[2].to_float()!!;
 			} else {
 				instr.args[0] = arg_to_idx(parts[2]);
 				if (parts.len == 4) {
@@ -34,7 +34,7 @@ struct Instr {
 	Op op;
 	union {
 		uint[2] args;
-		double const_value;
+		float const_value;
 	}
 }
 
