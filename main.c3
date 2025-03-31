@@ -43,7 +43,7 @@ fn int main(String[] cli_args) {
 
 	Instr[] instrs = instructions::parse(tmem, input);
 	Chunk[] v = mem::temp_array(Chunk, instrs.len);
-	float[] output = mem::temp_array(float, IMAGE_PIXEL_COUNT);
+	char[] output = mem::temp_array(char, IMAGE_PIXEL_COUNT);
 
 	for (usz idx = 0; idx < IMAGE_PIXEL_COUNT; idx += SIMD_CHUNK_SIZE) {
 		uint last_out;
@@ -70,7 +70,7 @@ fn int main(String[] cli_args) {
 			last_out = out;
 		}
 		foreach (chunk_idx, value: v[last_out]) {
-			output[idx + chunk_idx] = value;
+			output[idx + chunk_idx] = (int)(value < 0) * 255;
 		}
 
 		//if (idx % IMAGE_SIZE == 0) {
@@ -85,9 +85,7 @@ fn int main(String[] cli_args) {
 	}
 	// P5 expects raw bytes
 	io::fprintf(&f_out, "P5\n%d %d\n255\n", IMAGE_SIZE, IMAGE_SIZE)!!;
-	foreach (cell : output) {
-		f_out.write_byte((int)(cell < 0) * 255)!!;
-	}
+	f_out.write(output)!!;
 
 	return 0;
 }
