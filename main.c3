@@ -20,10 +20,14 @@ alias Chunk = float[<SIMD_CHUNK_SIZE>];
 
 fn int main(String[] cli_args) {
 	$assert(IMAGE_SIZE % SIMD_CHUNK_SIZE == 0);
+	if (cli_args.len != 2) {
+		io::eprintfn("Please provide path to prospero vm file");
+		return 1;
+	}
 
 	String? input = (String)file::load_temp(cli_args[1]);
 	if (catch err = input) {
-		io::eprintfn("Error loading prospero.vm");
+		io::eprintfn("Error loading prospero vm file %s", cli_args[1]);
 		return 1;
 	}
 	float[] space = linspace(-1, 1, IMAGE_SIZE);
